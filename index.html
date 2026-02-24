@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaPlay — Cracked Games</title>
+    <meta name="description" content="NovaPlay — Browse and download cracked games. Safe, fast, always up to date.">
+    <meta name="theme-color" content="#02030d">
+    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ===== MAINTENANCE MODE ===== */
+        #maintenance-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #02030d;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+        }
+        #maintenance-overlay.active { display: flex; }
+        #maintenance-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(34,211,238,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124,58,237,0.1)  0%, transparent 60%);
+            pointer-events: none;
+        }
+        .maint-gear { font-size:5rem; animation:spin 6s linear infinite; filter:drop-shadow(0 0 30px rgba(34,211,238,0.7)); margin-bottom:1.5rem; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .maint-badge { display:inline-block; background:linear-gradient(135deg, rgba(34,211,238,0.2), rgba(124,58,237,0.15)); border:1px solid rgba(34,211,238,0.35); color:#67e8f9; font-size:0.7rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; padding:0.35rem 1rem; border-radius:999px; margin-bottom:1.5rem; }
+        .maint-title { font-size:clamp(2rem,6vw,4rem); font-weight:800; background:linear-gradient(135deg, #fff, #67e8f9, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin:0 0 1rem; }
+        .maint-sub { font-size:1.05rem; color:rgba(200,200,230,0.65); max-width:460px; line-height:1.7; margin:0 0 2.5rem; }
+        .maint-progress-wrap { width:min(400px,90vw); height:4px; background:rgba(34,211,238,0.1); border-radius:999px; overflow:hidden; margin-bottom:2.5rem; }
+        .maint-progress-bar { height:100%; width:0%; background:linear-gradient(90deg, #22d3ee, #7c3aed, #a78bfa); border-radius:999px; animation:progress 4s ease-in-out infinite alternate; }
+        @keyframes progress { from{width:20%;} to{width:85%;} }
+        .maint-discord { display:inline-flex; align-items:center; gap:0.5rem; background:linear-gradient(135deg, #5865F2, #7c3aed); color:#fff; font-weight:700; font-size:0.9rem; text-decoration:none; padding:0.75rem 1.75rem; border-radius:12px; transition:transform 0.2s, box-shadow 0.2s; box-shadow:0 4px 24px rgba(99,102,241,0.35); }
+        .maint-discord:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(99,102,241,0.5); }
+        .maint-footer { position:absolute; bottom:1.5rem; font-size:0.75rem; color:rgba(200,200,230,0.3); }
+    </style>
+</head>
+
+<body class="page-jeux">
+
+    <!-- ========== MAINTENANCE OVERLAY ========== -->
+    <div id="maintenance-overlay">
+        <div class="maint-gear">⚙️</div>
+        <div class="maint-badge">System Status</div>
+        <h1 class="maint-title">We'll be back soon</h1>
+        <p class="maint-sub">
+            NovaPlay est actuellement en maintenance.<br>
+            On travaille dur pour améliorer votre expérience. Revenez très bientôt !
+        </p>
+        <div class="maint-progress-wrap"><div class="maint-progress-bar"></div></div>
+        <a href="https://discord.gg/scUwxCmf4D" target="_blank" class="maint-discord">
+            <img src="https://i.imgur.com/FM9VvXl.png" alt="Discord" width="20" height="20">
+            Rejoindre le Discord
+        </a>
+        <p class="maint-footer">© 2026 NovaPlay</p>
+    </div>
+
+    <!-- ========== COSMOS BACKGROUND ========== -->
+    <div class="aurora-layer">
+        <div class="aurora-band"></div>
+        <div class="aurora-band"></div>
+        <div class="aurora-band"></div>
+    </div>
+    <div class="nebula-orb nebula-orb-1" id="nebulaOrb1"></div>
+    <div class="nebula-orb nebula-orb-2" id="nebulaOrb2"></div>
+    <div class="nebula-orb nebula-orb-3" id="nebulaOrb3"></div>
+    <div class="mouse-follower" id="mouseFollower"></div>
+    <div class="floating-glow glow-1"></div>
+    <div class="floating-glow glow-2"></div>
+
+    <!-- ===== STICKY HEADER ===== -->
+    <header class="site-header" id="siteHeader">
+        <span class="header-logo">NovaPlay</span>
+        <div class="header-right">
+            <div class="header-stat" id="headerStat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                    <path d="M8 21h8M12 17v4"/>
+                </svg>
+                <span id="headerGameCount" class="header-stat-number">—</span>
+                <span>jeux</span>
+            </div>
+            <a href="https://discord.gg/scUwxCmf4D" target="_blank" rel="noopener" class="header-discord">
+                <img src="https://i.imgur.com/FM9VvXl.png" alt="Discord" width="16" height="16" loading="lazy">
+                Discord
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container-jeux">
+
+        <!-- Title -->
+        <div class="title-container">
+            <h1 class="big-title glitch" data-text="NovaPlay">NovaPlay</h1>
+            <div class="title-underline"></div>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                    <path d="M8 21h8M12 17v4"/>
+                </svg>
+                <strong id="statTotal">—</strong>
+                <span>jeux</span>
+            </div>
+            <div class="stat-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <strong id="statSolo">—</strong>
+                <span>solo</span>
+            </div>
+            <div class="stat-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <strong id="statMulti">—</strong>
+                <span>multi</span>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar-container">
+            <div class="search-bar-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="search-bar" id="gameSearch" placeholder="Rechercher un jeu..." autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-container" id="filterContainer">
+            <button class="filter-btn active" data-filter="all">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Tous
+            </button>
+            <button class="filter-btn" data-filter="solo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Solo
+            </button>
+            <button class="filter-btn" data-filter="multiplayer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Multijoueur
+            </button>
+        </div>
+
+        <!-- Results info -->
+        <p class="results-info" id="resultsInfo" aria-live="polite"></p>
+
+        <!-- Games Grid -->
+        <div class="games-grid" id="gamesGrid" role="list"></div>
+
+        <!-- Pagination -->
+        <nav class="pagination-container" id="paginationContainer" aria-label="Pagination"></nav>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-logo">NovaPlay</h3>
+                    <p class="footer-tagline">The ultimate destination for premium cracked games. Safe, fast, and always up to date.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liens rapides</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="https://discord.gg/scUwxCmf4D" target="_blank" rel="noopener">Discord</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Communauté</h4>
+                    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:8px;">Rejoins notre Discord pour demander des jeux ou signaler des bugs.</p>
+                    <a href="https://discord.gg/scUwxCmf4D" class="footer-discord-btn" target="_blank" rel="noopener">
+                        <img src="https://i.imgur.com/FM9VvXl.png" alt="Discord" width="15" height="15" loading="lazy">
+                        REJOINDRE
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 NovaPlay. All rights reserved.</p>
+                <p class="footer-disclaimer">Disclaimer: We do not host any files. All links are from 3rd party sites.</p>
+            </div>
+        </footer>
+    </div>
+
+    <button id="backToTop" class="back-to-top" aria-label="Retour en haut">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
+
+    <script src="game.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+    (function () {
+        // ── Maintenance ──────────────────────────────────────────
+        var SECRET = 'NOVAPLAYTEST1234560OPTEST';
+        var MAINTENANCE = false;
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('bypass') === SECRET) {
+            localStorage.setItem('novaplay_bypass', SECRET);
+            history.replaceState(null, '', window.location.pathname);
+        }
+        if (MAINTENANCE && localStorage.getItem('novaplay_bypass') !== SECRET) {
+            document.getElementById('maintenance-overlay').classList.add('active');
+        }
+
+        // ── Cosmos: scroll parallax for nebula orbs ──────────────
+        var orb1 = document.getElementById('nebulaOrb1');
+        var orb2 = document.getElementById('nebulaOrb2');
+        var orb3 = document.getElementById('nebulaOrb3');
+        var rafPending = false;
+        window.addEventListener('scroll', function () {
+            if (!rafPending) {
+                rafPending = true;
+                requestAnimationFrame(function () {
+                    var sy = window.scrollY;
+                    if (orb1) orb1.style.transform = 'translateY(' + (sy * 0.15) + 'px)';
+                    if (orb2) orb2.style.transform = 'translateY(' + (sy * -0.1) + 'px)';
+                    if (orb3) orb3.style.transform = 'translateY(' + (sy * 0.08) + 'px)';
+                    rafPending = false;
+                });
+            }
+        }, { passive: true });
+
+        // ── Shooting stars ───────────────────────────────────────
+        function spawnStar() {
+            var s = document.createElement('div');
+            s.className = 'shooting-star';
+            s.style.left = (Math.random() * window.innerWidth * 0.8 + window.innerWidth * 0.08) + 'px';
+            s.style.top  = (Math.random() * window.innerHeight * 0.4) + 'px';
+            var dur = 1.1 + Math.random() * 0.9;
+            s.style.animation = 'shoot ' + dur + 's linear forwards';
+            document.body.appendChild(s);
+            setTimeout(function () { s.remove(); }, (dur + 0.2) * 1000);
+        }
+        (function scheduleNext() {
+            setTimeout(function () { spawnStar(); scheduleNext(); }, 4500 + Math.random() * 6000);
+        })();
+
+        // ── Mouse follower (smooth lag) ──────────────────────────
+        var follower = document.getElementById('mouseFollower');
+        if (follower) {
+            var mx = 0, my = 0, fx = 0, fy = 0;
+            document.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; }, { passive: true });
+            (function animF() {
+                fx += (mx - fx) * 0.09;
+                fy += (my - fy) * 0.09;
+                follower.style.left = fx + 'px';
+                follower.style.top  = fy + 'px';
+                requestAnimationFrame(animF);
+            })();
+        }
+
+        // ── Header scroll ────────────────────────────────────────
+        var header = document.getElementById('siteHeader');
+        if (header) {
+            window.addEventListener('scroll', function () {
+                header.classList.toggle('scrolled', window.scrollY > 20);
+            }, { passive: true });
+        }
+
+        // ── Stats bar update ──────────────────────────────────────
+        window.addEventListener('novaplay:gamesLoaded', function (e) {
+            var d = e.detail || {};
+            var el = document.getElementById('headerGameCount');
+            if (el && typeof d.count === 'number') el.textContent = d.count.toLocaleString('fr-FR');
+            var st = document.getElementById('statTotal');
+            var ss = document.getElementById('statSolo');
+            var sm = document.getElementById('statMulti');
+            if (st) st.textContent = (d.count  || 0).toLocaleString('fr-FR');
+            if (ss) ss.textContent = (d.solo   || 0).toLocaleString('fr-FR');
+            if (sm) sm.textContent = (d.multi  || 0).toLocaleString('fr-FR');
+        });
+
+        // ── Back to top ──────────────────────────────────────────
+        var btt = document.getElementById('backToTop');
+        if (btt) {
+            window.addEventListener('scroll', function () {
+                btt.classList.toggle('show', window.scrollY > 500);
+            }, { passive: true });
+            btt.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        }
+    })();
+    </script>
+</body>
+</html>
